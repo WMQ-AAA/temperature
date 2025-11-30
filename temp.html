@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海南气候特征分析 - 四季数据可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #e6f7ff 0%, #f0f9eb 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(90deg, #1890ff 0%, #52c41a 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .intro {
+            padding: 25px;
+            background: #f8fdff;
+            border-bottom: 1px solid #e8f4ff;
+        }
+        
+        .intro p {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            text-align: justify;
+        }
+        
+        .season-highlight {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            padding: 20px;
+            background: #f0f9ff;
+            border-bottom: 1px solid #e1f5fe;
+        }
+        
+        .season-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            width: 220px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
+        
+        .season-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .spring { border-top: 4px solid #52c41a; }
+        .summer { border-top: 4px solid #fa541c; }
+        .autumn { border-top: 4px solid #faad14; }
+        .winter { border-top: 4px solid #1890ff; }
+        
+        .season-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .season-temp {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .season-desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        
+        .chart-box {
+            flex: 1;
+            min-width: 300px;
+            height: 400px;
+            margin: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 15px;
+        }
+        
+        .chart-title {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #1890ff;
+            font-weight: bold;
+        }
+        
+        .data-table {
+            width: 100%;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border: 1px solid #e8e8e8;
+        }
+        
+        th {
+            background: #1890ff;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f7fbff;
+        }
+        
+        tr:hover {
+            background-color: #e6f7ff;
+        }
+        
+        .conclusion {
+            padding: 25px;
+            background: #f6ffed;
+            border-top: 1px solid #e6ffd1;
+            border-radius: 0 0 15px 15px;
+        }
+        
+        .conclusion h2 {
+            color: #389e0d;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .conclusion p {
+            margin-bottom: 10px;
+            font-size: 1.05rem;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-container {
+                flex-direction: column;
+            }
+            
+            .chart-box {
+                min-width: 100%;
+            }
+            
+            .season-card {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>海南气候特征分析</h1>
+            <div class="subtitle">四季气温分布与变化趋势可视化</div>
+        </header>
+        
+        <section class="intro">
+            <p>海南岛地处热带北缘，属热带季风气候，素来有"天然大温室"的美称。这里长夏无冬，年平均气温22~27℃，最冷的一月份温度仍达17～24℃，年光照为1750～2650小时，光照率为50%～60%，光温充足，光合潜力高。</p>
+            <p>海南岛入春早，升温快，日温差大，全年无霜冻，冬季温暖，稻可三熟，菜满四季，是中国南繁育种的理想基地。</p>
+        </section>
+        
+        <section class="season-highlight">
+            <div class="season-card spring">
+                <div class="season-title">春季 (3-5月)</div>
+                <div class="season-temp">22-28°C</div>
+                <div class="season-desc">气温回升快，温暖舒适，全岛进入最佳旅游季节之一</div>
+            </div>
+            <div class="season-card summer">
+                <div class="season-title">夏季 (6-8月)</div>
+                <div class="season-temp">26-32°C</div>
+                <div class="season-desc">全年最热时段，高温多雨，海风调节沿海地区酷暑</div>
+            </div>
+            <div class="season-card autumn">
+                <div class="season-title">秋季 (9-11月)</div>
+                <div class="season-temp">23-28°C</div>
+                <div class="season-desc">暑热消退，天气凉爽，湿度下降，体感舒适</div>
+            </div>
+            <div class="season-card winter">
+                <div class="season-title">冬季 (12-2月)</div>
+                <div class="season-temp">17-22°C</div>
+                <div class="season-desc">全年最舒适季节，南部沿海温暖如春，是避寒度假天堂</div>
+            </div>
+        </section>
+        
+        <section class="charts-container">
+            <div class="chart-box">
+                <div class="chart-title">海南月平均气温变化</div>
+                <div id="temperatureChart" style="width: 100%; height: 350px;"></div>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">季节气温分布</div>
+                <div id="seasonChart" style="width: 100%; height: 350px;"></div>
+            </div>
+        </section>
+        
+        <section class="data-table">
+            <h2 style="text-align: center; color: #1890ff; margin-bottom: 15px;">海南月平均气温详细数据</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>月份</th>
+                        <th>平均气温(°C)</th>
+                        <th>最高气温(°C)</th>
+                        <th>最低气温(°C)</th>
+                        <th>季节</th>
+                        <th>旅游推荐指数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1月</td><td>18.5</td><td>23.0</td><td>15.0</td><td>冬季</td><td>★★★★★</td></tr>
+                    <tr><td>2月</td><td>19.5</td><td>24.0</td><td>16.0</td><td>冬季</td><td>★★★★★</td></tr>
+                    <tr><td>3月</td><td>22.0</td><td>26.5</td><td>18.5</td><td>春季</td><td>★★★★☆</td></tr>
+                    <tr><td>4月</td><td>25.5</td><td>29.5</td><td>22.0</td><td>春季</td><td>★★★★☆</td></tr>
+                    <tr><td>5月</td><td>27.5</td><td>31.5</td><td>24.5</td><td>春季</td><td>★★★☆☆</td></tr>
+                    <tr><td>6月</td><td>28.5</td><td>32.5</td><td>25.5</td><td>夏季</td><td>★★☆☆☆</td></tr>
+                    <tr><td>7月</td><td>28.5</td><td>32.5</td><td>25.5</td><td>夏季</td><td>★★☆☆☆</td></tr>
+                    <tr><td>8月</td><td>28.0</td><td>32.0</td><td>25.0</td><td>夏季</td><td>★★☆☆☆</td></tr>
+                    <tr><td>9月</td><td>27.0</td><td>31.0</td><td>24.0</td><td>秋季</td><td>★★★☆☆</td></tr>
+                    <tr><td>10月</td><td>25.0</td><td>29.0</td><td>22.0</td><td>秋季</td><td>★★★★☆</td></tr>
+                    <tr><td>11月</td><td>22.5</td><td>27.0</td><td>19.5</td><td>秋季</td><td>★★★★★</td></tr>
+                    <tr><td>12月</td><td>19.5</td><td>24.0</td><td>16.5</td><td>冬季</td><td>★★★★★</td></tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section class="conclusion">
+            <h2>气候特征总结</h2>
+            <p>1. <strong>长夏无冬</strong>：海南全省没有一个月的平均气温低于16°C，真正实现了"长夏无冬"，四季皆宜旅游。</p>
+            <p>2. <strong>温差显著</strong>：最冷在1月，最热在6、7月。空间上，南部气温高于北部，沿海平原气温高于中部山区。</p>
+            <p>3. <strong>最佳旅游期</strong>：每年11月至次年3月是海南旅游的黄金季节，此时天气凉爽干燥，适合避寒度假。</p>
+            <p>4. <strong>区域差异</strong>：在冬季，南北温差可达5℃以上，三亚等地温暖如春，而海口及中部山区则相对凉爽。</p>
+        </section>
+    </div>
+
+    <script>
+        // 初始化ECharts实例
+        const tempChart = echarts.init(document.getElementById('temperatureChart'));
+        const seasonChart = echarts.init(document.getElementById('seasonChart'));
+        
+        // 月平均气温图表配置
+        const temperatureOption = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    return `${params[0].name}<br/>平均气温: ${params[0].value}°C`;
+                }
+            },
+            xAxis: {
+                type: 'category',
+                data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                axisLine: {
+                    lineStyle: {
+                        color: '#1890ff'
+                    }
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: '温度(°C)',
+                min: 15,
+                max: 35,
+                axisLine: {
+                    lineStyle: {
+                        color: '#1890ff'
+                    }
+                },
+                splitLine: {
+                    lineStyle: {
+                        type: 'dashed'
+                    }
+                }
+            },
+            series: [
+                {
+                    name: '平均气温',
+                    type: 'line',
+                    smooth: true,
+                    data: [18.5, 19.5, 22.0, 25.5, 27.5, 28.5, 28.5, 28.0, 27.0, 25.0, 22.5, 19.5],
+                    lineStyle: {
+                        width: 4,
+                        color: '#1890ff'
+                    },
+                    itemStyle: {
+                        color: '#1890ff'
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(24, 144, 255, 0.6)' },
+                            { offset: 1, color: 'rgba(24, 144, 255, 0.1)' }
+                        ])
+                    },
+                    markPoint: {
+                        data: [
+                            { type: 'max', name: '最高' },
+                            { type: 'min', name: '最低' }
+                        ]
+                    }
+                }
+            ],
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            }
+        };
+        
+        // 季节气温分布图表配置
+        const seasonOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            legend: {
+                data: ['平均气温', '最高气温', '最低气温']
+            },
+            xAxis: {
+                type: 'category',
+                data: ['冬季', '春季', '夏季', '秋季'],
+                axisLine: {
+                    lineStyle: {
+                        color: '#1890ff'
+                    }
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: '温度(°C)',
+                axisLine: {
+                    lineStyle: {
+                        color: '#1890ff'
+                    }
+                },
+                splitLine: {
+                    lineStyle: {
+                        type: 'dashed'
+                    }
+                }
+            },
+            series: [
+                {
+                    name: '平均气温',
+                    type: 'bar',
+                    data: [19.2, 25.0, 28.3, 24.8],
+                    itemStyle: {
+                        color: '#1890ff'
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}°C'
+                    }
+                },
+                {
+                    name: '最高气温',
+                    type: 'bar',
+                    data: [23.7, 29.2, 32.3, 29.0],
+                    itemStyle: {
+                        color: '#fa541c'
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}°C'
+                    }
+                },
+                {
+                    name: '最低气温',
+                    type: 'bar',
+                    data: [15.8, 21.7, 25.3, 21.8],
+                    itemStyle: {
+                        color: '#52c41a'
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}°C'
+                    }
+                }
+            ],
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            }
+        };
+        
+        // 使用配置项显示图表
+        tempChart.setOption(temperatureOption);
+        seasonChart.setOption(seasonOption);
+        
+        // 响应窗口大小变化
+        window.addEventListener('resize', function() {
+            tempChart.resize();
+            seasonChart.resize();
+        });
+    </script>
+</body>
+</html>
